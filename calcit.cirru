@@ -8,15 +8,40 @@
       :modules $ [] |memof/ |quaternion/ |lagopus/
       :type-slots $ {}
   :files $ {}
+    'app.browser $ %{} 'FileEntry
+      :defs $ {}
+        'error-text $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn error-text (message) |
+          :examples $ []
+          :ffi $ {} (:target :browser)
+            :js $ {} $ :inline "|(message) => String(message)"
+          :schema $ :: 'Fn $ {} (:return 'String)
+            :args $ [] 'JsObject
+            :features $ #{} :js-ffi
+        'show-status! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn show-status! (status message) &unit
+          :examples $ []
+          :ffi $ {} (:target :browser)
+            :js $ {}
+              :inline "|(status, message) => { tip.default(status, message); }"
+              :modules $ {} $ :tip |bottom-tip
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'String 'String
+            :features $ #{} :js-ffi
+      :ns $ %{} 'NsEntry (:doc |)
+        :code $ quote $ ns app.browser
     'app.comp.container $ %{} 'FileEntry
       :defs $ {}
         'comp-container $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-container (store)
-            group nil (memof1-call comp-tabs)
-              case-default (:tab store) (group nil)
-                :cube $ comp-cube
+            group nil (memo-object comp-tabs)
+              if
+                = :cube $ .unwrap-or (get store :tab) nil
+                comp-cube
+                group nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'JsObject)
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
         'comp-cube $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-cube ()
             object $ {} (:shader cube-wgsl)
@@ -33,7 +58,8 @@
                 {} $ :position $ [] 100 0 100
               :indices $ [] ([] 0 1 2 0 2 3) ([] 0 1 5 0 4 5) ([] 1 2 6 1 6 5) ([] 2 3 6 3 6 7) ([] 0 3 4 3 4 7) ([] 4 5 6 4 6 7)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'JsObject)
+            :args $ []
         'comp-tabs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-tabs ()
             group nil
@@ -52,23 +78,20 @@
                 fn (e d!)
                   d! $ :: :tab :todo
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'JsObject)
+            :args $ []
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.container
           :require
-            lagopus.alias :refer $ group object
+            lagopus.alias :refer $ group object memo-object
             |../shaders/cube.wgsl :default cube-wgsl
             lagopus.comp.button :refer $ comp-button
-            lagopus.comp.curves :refer $ comp-curves
-            lagopus.comp.spots :refer $ comp-spots
-            memof.once :refer $ memof1-call
-            quaternion.core :refer $ c+
             quaternion.vector :refer $ v3
     'app.config $ %{} 'FileEntry
       :defs $ {} $ 'dev?
         %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
-            &= |dev $ get-env |mode |release
+            = |dev $ .unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Bool
       :ns $ %{} 'NsEntry (:doc |)
@@ -81,90 +104,86 @@
           :examples $ []
           :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
         'canvas $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def canvas (js/document.querySelector |canvas)
+          :code $ quote $ def canvas (browser/query-canvas!)
           :examples $ []
-          :ffi $ {} (:backend :js) (:target :browser)
-          :schema $ :: 'Dynamic
+          :schema $ :: 'lagopus.browser/Canvas
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
-            if dev? $ js/console.log op
+            if dev? $ println op
             let
                 store @*store
                 next-store $ match op
-                  (:states cursor s) (update-states store cursor s)
-                  (:tab t) (assoc store :tab t)
-                  _ $ do (eprintln ":unknown op" op) store
+                  (:states cursor data)
+                    if
+                      and (list? cursor) (every? cursor tag?)
+                      update-states store
+                        assert-type cursor $ :: 'List 'Tag
+                        , data
+                      raise "|State cursor must be a list of tags"
+                  (:tab tab)
+                    if (tag? tab) (assoc store :tab tab) (raise "|Tab must be a tag")
+                  _ $ do (eprintln "|Unknown operation" op) store
               if (not= next-store store) (reset! *store next-store)
-            , &unit
+              , &unit
           :examples $ []
-          :ffi $ {} (:backend :js) (:target :browser)
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ [] 'Enum
-            :features $ #{} :js-ffi
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             if dev? $ load-console-formatter!
-            js-await $ initializeContext
-            initializeCanvasTextures
-            reset-clear-color! $ either bg-color $ {} (:r 0.18) (:g 0.2) (:b 0.36) (:a 1)
+            js-await $ gpu/initialize-device!
+            runtime/initialize-textures!
+            reset-clear-color! $ .unwrap-or bg-color $ :: :rgba 0.18 0.2 0.36 1
             render-app!
-            renderControl
-            startControlLoop 10 onControlEvent
-            set! js/window.__lagopusHandleCompilationInfo handle-compilation
-            set! js/window.onresize $ fn (e) (resetCanvasSize canvas) (initializeCanvasTextures) (paintLagopusTree)
-            resetCanvasSize canvas
-            add-watch! *store :change $ fn (next store)
-              hint-fn $ {}
-                :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'Map 'Tag 'Dynamic)
-                :return 'Unit
-              render-app!
-              , &unit
-            setupMouseEvents canvas
+            runtime/start-controls!
+            runtime/register-shader-result! handle-compilation
+            browser/set-resize-handler! resize!
+            runtime/reset-canvas! canvas
+            add-watch! *store :change store-changed!
+            runtime/setup-mouse! canvas
+            runtime/paint!
             , &unit
           :examples $ []
-          :ffi $ {} (:backend :js) (:target :browser)
           :schema $ :: 'Fn $ {} (:async true) (:return 'Unit)
             :args $ []
             :features $ #{} :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
-            if (nil? build-errors)
-              do (reset-memof1-caches!) (render-app!) (remove-watch! *store :change)
-                add-watch! *store :change $ fn (next store)
-                  hint-fn $ {}
-                    :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'Map 'Tag 'Dynamic)
-                    :return 'Unit
-                  render-app!
-                  , &unit
-                println |Reloaded.
-                hud! |ok~ |OK
-              hud! |error build-errors
-            , &unit
+            if (js-nullish? build-errors)
+              do (reset-memof1-caches!) (render-app!) (remove-watch! *store :change) (add-watch! *store :change store-changed!) (println |Reloaded.) (show-status! |ok~ |OK)
+              show-status! |error $ app.browser/error-text build-errors
           :examples $ []
-          :ffi $ {} (:backend :js) (:target :browser)
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
             :features $ #{} :js-ffi
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
-            let
-                tree $ comp-container @*store
-              renderLagopusTree tree dispatch!
+            runtime/render-tree! (comp-container @*store) dispatch!
+            runtime/paint!
           :examples $ []
-          :ffi $ {} (:backend :js) (:target :browser)
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
-            :features $ #{} :js-ffi
+        'resize! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn resize! (_event) (runtime/reset-canvas! canvas) (runtime/initialize-textures!) (runtime/paint!)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'JsObject
+        'store-changed! $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn store-changed! (_next _previous) (render-app!)
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'Map 'Tag 'Dynamic)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
             app.comp.container :refer $ comp-container
-            |@triadica/lagopus :refer $ setupMouseEvents onControlEvent paintLagopusTree renderLagopusTree initializeContext resetCanvasSize initializeCanvasTextures
-            |@triadica/touch-control :refer $ renderControl startControlLoop
             app.config :refer $ dev?
-            |bottom-tip :default hud!
             |./calcit.build-errors :default build-errors
             memof.once :refer $ reset-memof1-caches!
             lagopus.util :refer $ handle-compilation reset-clear-color!
             lagopus.cursor :refer $ update-states
             lagopus.config :refer $ bg-color
+            lagopus.gpu :as gpu
+            lagopus.browser :as browser
+            lagopus.runtime :as runtime
+            app.browser :refer $ show-status!
