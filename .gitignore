@@ -5,3 +5,6 @@
 js-out/
 node_modules/
 dist/
+.calcit/
+.yarn/
+.DS_Store
