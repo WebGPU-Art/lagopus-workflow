@@ -45,6 +45,7 @@ jobs:
           calcit edit format
           git diff --exit-code -- calcit.cirru
           calcit --check-only --all-defs --warn-dyn-method --format json
+          calcit fix --workflow strict --verify
           calcit --check-only --ns app.main --ns app.browser --ns app.comp.container --ns app.config --summary-only --format json
       - name: Select frontend CDN path
         id: asset-path

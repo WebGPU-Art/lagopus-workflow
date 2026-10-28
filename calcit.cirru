@@ -99,7 +99,7 @@
     'app.main $ %{} 'FileEntry
       :defs $ {}
         '*store $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defatom *store
+          :code $ quote $ defref *store
             {} $ :tab :cube
           :examples $ []
           :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
@@ -114,10 +114,10 @@
                 store @*store
                 next-store $ match op
                   (:states cursor data)
-                    if
-                      and (list? cursor) (every? cursor tag?)
+                    if (list? cursor)
                       update-states store
-                        assert-type cursor $ :: 'List 'Tag
+                        .map cursor $ fn (part)
+                          if (tag? part) part $ raise "|State cursor must be a list of tags"
                         , data
                       raise "|State cursor must be a list of tags"
                   (:tab tab)
