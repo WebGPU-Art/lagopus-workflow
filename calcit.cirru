@@ -15,9 +15,7 @@
           :examples $ []
           :ffi $ {} (:target :browser)
             :js $ {} $ :inline "|(message) => String(message)"
-          :schema $ :: 'Fn $ {} (:return 'String)
-            :args $ [] 'JsObject
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn JsObject (-> String) (:features :js-ffi)
         'show-status! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn show-status! (status message) &unit
           :examples $ []
@@ -25,9 +23,7 @@
             :js $ {}
               :inline "|(status, message) => { tip.default(status, message); }"
               :modules $ {} $ :tip |bottom-tip
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'String 'String
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn String String (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.browser
     'app.comp.container $ %{} 'FileEntry
@@ -36,12 +32,11 @@
           :code $ quote $ defn comp-container (store)
             group nil (memo-object comp-tabs)
               if
-                = :cube $ .unwrap-or (get store :tab) nil
+                = :cube $ .unwrap-or (get store :tab) :todo
                 comp-cube
                 group nil
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'JsObject)
-            :args $ [] $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Fn (Map Tag Dynamic) (-> JsObject)
         'comp-cube $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-cube ()
             object $ {} (:shader cube-wgsl)
@@ -58,8 +53,7 @@
                 {} $ :position $ [] 100 0 100
               :indices $ [] ([] 0 1 2 0 2 3) ([] 0 1 5 0 4 5) ([] 1 2 6 1 6 5) ([] 2 3 6 3 6 7) ([] 0 3 4 3 4 7) ([] 4 5 6 4 6 7)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'JsObject)
-            :args $ []
+          :schema $ quote $ Fn (-> JsObject)
         'comp-tabs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-tabs ()
             group nil
@@ -78,8 +72,7 @@
                 fn (e d!)
                   d! $ :: :tab :todo
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'JsObject)
-            :args $ []
+          :schema $ quote $ Fn (-> JsObject)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.container
           :require
@@ -93,7 +86,7 @@
           :code $ quote $ def dev?
             = |dev $ .unwrap-or (get-env |mode) |release
           :examples $ []
-          :schema $ :: 'Bool
+          :schema $ quote Bool
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.config
     'app.main $ %{} 'FileEntry
@@ -102,11 +95,11 @@
           :code $ quote $ defref *store
             {} $ :tab :cube
           :examples $ []
-          :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
+          :schema $ quote $ Ref (Map Tag Dynamic)
         'canvas $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def canvas (browser/query-canvas!)
           :examples $ []
-          :schema $ :: 'lagopus.browser/Canvas
+          :schema $ quote lagopus.browser/Canvas
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             if dev? $ println op
@@ -126,8 +119,7 @@
               if (not= next-store store) (reset! *store next-store)
               , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'Enum
+          :schema $ quote $ Fn AnyEnum (-> Unit)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             if dev? $ load-console-formatter!
@@ -144,35 +136,28 @@
             runtime/paint!
             , &unit
           :examples $ []
-          :schema $ :: 'Fn $ {} (:async true) (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi) (:async)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (js-nullish? build-errors)
               do (reset-memof1-caches!) (render-app!) (remove-watch! *store :change) (add-watch! *store :change store-changed!) (println |Reloaded.) (show-status! |ok~ |OK)
               show-status! |error $ app.browser/error-text build-errors
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
-            :features $ #{} :js-ffi
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             runtime/render-tree! (comp-container @*store) dispatch!
             runtime/paint!
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ []
+          :schema $ quote $ Fn (-> Unit)
         'resize! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resize! (_event) (runtime/reset-canvas! canvas) (runtime/initialize-textures!) (runtime/paint!)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] 'JsObject
+          :schema $ quote $ Fn JsObject (-> Unit)
         'store-changed! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn store-changed! (_next _previous) (render-app!)
           :examples $ []
-          :schema $ :: 'Fn $ {} (:return 'Unit)
-            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'Map 'Tag 'Dynamic)
+          :schema $ quote $ Fn (Map Tag Dynamic) (Map Tag Dynamic) (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require

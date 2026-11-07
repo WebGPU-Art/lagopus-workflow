@@ -10,11 +10,11 @@ https://github.com/Triadica/lagopus-workflow
 
 ### 使用者影响
 
-本轮升级为正式 Calcit 0.31.0。立方体、两个场景标签及状态事件保持原语义，页面报错仍通过原 bottom-tip 适配器显示。旧 `defatom` 改为 `defref`；状态游标逐元素验证为 Tag 后再写入，非法游标仍被拒绝，不用类型断言代替检查。没有改变 shader、几何数据或部署路径。
+本轮升级为正式 Calcit 0.36.0。立方体、两个场景标签及状态事件保持原语义，页面报错仍通过原 bottom-tip 适配器显示。旧 `defatom` 改为 `defref`；状态游标逐元素验证为 Tag 后再写入，非法游标仍被拒绝，不用类型断言代替检查。没有改变 shader、几何数据或部署路径。
 
 ### 开发与部署迁移
 
-工具链使用稳定 Calcit / `@calcit/procs` 0.31.0、Caps 0.1.1、Node.js 24 和 Yarn 4.18.0。依赖固定为已发布的 Lagopus 0.5.13、memof 0.0.41、quaternion 0.2.17。唯一源码快照为 `calcit.cirru`，依赖与版本维护在 `deps.cirru`；不再保留 `compact.cirru` 或 `package.cirru`，`js-out/`、`dist/` 不入库。
+工具链使用稳定 Calcit / `@calcit/procs` 0.36.0、Caps 0.1.1、Node.js 24 和 Yarn 4.18.0。依赖固定为已发布的 Lagopus 0.5.16、memof 0.0.44、quaternion 0.2.20。唯一源码快照为 `calcit.cirru`，依赖与版本维护在 `deps.cirru`；不再保留 `compact.cirru` 或 `package.cirru`，`js-out/`、`dist/` 不入库。
 
 ```sh
 caps --strict --ci
