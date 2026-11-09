@@ -28,15 +28,18 @@
         :code $ quote $ ns app.browser
     'app.comp.container $ %{} 'FileEntry
       :defs $ {}
-        'comp-container $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn comp-container (store)
-            group nil (memo-object comp-tabs)
-              if
-                = :cube $ .unwrap-or (get store :tab) :todo
-                comp-cube
-                group nil
+        'SceneTab $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defenum SceneTab (:cube) (:todo)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (-> JsObject)
+          :schema $ quote EnumDef
+        'comp-container $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn comp-container (tab)
+            group nil (memo-object comp-tabs)
+              match tab
+                (:cube) (comp-cube)
+                (:todo) (group nil)
+          :examples $ []
+          :schema $ quote $ Fn app.comp.container/SceneTab (-> JsObject)
         'comp-cube $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-cube ()
             object $ {} (:shader cube-wgsl)
@@ -63,14 +66,20 @@
                   :color $ [] 0.3 0.9 0.2 1
                   :size 20
                 fn (e d!)
-                  d! $ :: :tab :cube
+                  hint-fn $ Fn JsObject
+                    Fn app.comp.container/SceneTab $ -> Unit
+                    -> Unit
+                  d! $ SceneTab :cube
               comp-button
                 {}
                   :position $ v3 40 200 0
                   :color $ [] 0.8 0.3 1 1
                   :size 20
                 fn (e d!)
-                  d! $ :: :tab :todo
+                  hint-fn $ Fn JsObject
+                    Fn app.comp.container/SceneTab $ -> Unit
+                    -> Unit
+                  d! $ SceneTab :todo
           :examples $ []
           :schema $ quote $ Fn (-> JsObject)
       :ns $ %{} 'NsEntry (:doc |)
@@ -92,40 +101,26 @@
     'app.main $ %{} 'FileEntry
       :defs $ {}
         '*store $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defref *store
-            {} $ :tab :cube
+          :code $ quote $ defref *store (app.comp.container/SceneTab :cube)
           :examples $ []
-          :schema $ quote $ Ref (Map Tag Dynamic)
+          :schema $ quote $ Ref app.comp.container/SceneTab
         'canvas $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def canvas (browser/query-canvas!)
           :examples $ []
           :schema $ quote lagopus.browser/Canvas
         'dispatch! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn dispatch! (op)
-            if dev? $ println op
-            let
-                store @*store
-                next-store $ match op
-                  (:states cursor data)
-                    if (list? cursor)
-                      update-states store
-                        .map cursor $ fn (part)
-                          if (tag? part) part $ raise "|State cursor must be a list of tags"
-                        , data
-                      raise "|State cursor must be a list of tags"
-                  (:tab tab)
-                    if (tag? tab) (assoc store :tab tab) (raise "|Tab must be a tag")
-                  _ $ do (eprintln "|Unknown operation" op) store
-              if (not= next-store store) (reset! *store next-store)
-              , &unit
+          :code $ quote $ defn dispatch! (tab)
+            if dev? $ println tab
+            when (not= tab @*store) (reset! *store tab)
+            , &unit
           :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit)
+          :schema $ quote $ Fn app.comp.container/SceneTab (-> Unit)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             if dev? $ load-console-formatter!
             js-await $ gpu/initialize-device!
             runtime/initialize-textures!
-            reset-clear-color! $ .unwrap-or bg-color $ :: :rgba 0.18 0.2 0.36 1
+            reset-clear-color! $ .unwrap-or bg-color $ lagopus.config/ClearColor :rgba 0.18 0.2 0.36 1
             render-app!
             runtime/start-controls!
             runtime/register-shader-result! handle-compilation
@@ -157,7 +152,7 @@
         'store-changed! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn store-changed! (_next _previous) (render-app!)
           :examples $ []
-          :schema $ quote $ Fn (Map Tag Dynamic) (Map Tag Dynamic) (-> Unit)
+          :schema $ quote $ Fn app.comp.container/SceneTab app.comp.container/SceneTab (-> Unit)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
@@ -166,7 +161,6 @@
             |./calcit.build-errors :default build-errors
             memof.once :refer $ reset-memof1-caches!
             lagopus.util :refer $ handle-compilation reset-clear-color!
-            lagopus.cursor :refer $ update-states
             lagopus.config :refer $ bg-color
             lagopus.gpu :as gpu
             lagopus.browser :as browser
