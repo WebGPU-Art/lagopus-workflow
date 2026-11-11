@@ -39,7 +39,7 @@
                 (:cube) (comp-cube)
                 (:todo) (group nil)
           :examples $ []
-          :schema $ quote $ Fn app.comp.container/SceneTab (-> JsObject)
+          :schema $ quote $ Fn SceneTab (-> JsObject)
         'comp-cube $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-cube ()
             object $ {} (:shader cube-wgsl)
@@ -107,7 +107,7 @@
         'canvas $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def canvas (browser/query-canvas!)
           :examples $ []
-          :schema $ quote lagopus.browser/Canvas
+          :schema $ quote browser/Canvas
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (tab)
             if dev? $ println tab
