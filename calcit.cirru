@@ -67,7 +67,7 @@
                   :size 20
                 fn (e d!)
                   hint-fn $ Fn JsObject
-                    Fn app.comp.container/SceneTab $ -> Unit
+                    Fn SceneTab $ -> Unit
                     -> Unit
                   d! $ SceneTab :cube
               comp-button
@@ -77,7 +77,7 @@
                   :size 20
                 fn (e d!)
                   hint-fn $ Fn JsObject
-                    Fn app.comp.container/SceneTab $ -> Unit
+                    Fn SceneTab $ -> Unit
                     -> Unit
                   d! $ SceneTab :todo
           :examples $ []
