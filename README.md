@@ -10,11 +10,11 @@ https://github.com/Triadica/lagopus-workflow
 
 ### 使用者影响
 
-使用正式 Calcit 0.41.1。立方体和两个场景按钮沿用原操作，页面报错继续通过 bottom-tip 显示。扩展示例时，场景按钮直接派发 `SceneTab`，目前只有 `:cube` 和 `:todo` 两个变体。
+使用正式 Calcit 0.42.1。立方体和两个场景按钮沿用原操作，页面报错继续通过 bottom-tip 显示。扩展示例时，场景按钮直接派发 `SceneTab`，目前只有 `:cube` 和 `:todo` 两个变体。
 
 ### 开发与部署迁移
 
-工具链使用稳定 Calcit / `@calcit/procs` 0.41.1、Caps 0.1.1、Node.js 24 和 Yarn 4.18.0。使用已发布的 Lagopus 0.5.17、Memof 0.0.47 和 Quaternion 0.2.23。`@triadica/lagopus` 0.2.0 的 npm 运行时仍要求 Touch Control 0.0.4-a1。唯一源码快照为 `calcit.cirru`，依赖与版本维护在 `deps.cirru`；生成文件输出到 `js-out/` 和 `dist/`。
+工具链使用稳定 Calcit / `@calcit/procs` 0.42.1、Caps 0.1.1、Node.js 24 和 Yarn 4.18.0。使用已发布的 Lagopus 0.5.17、Memof 0.0.47 和 Quaternion 0.2.23。`@triadica/lagopus` 0.2.0 的 npm 运行时仍要求 Touch Control 0.0.4-a1。唯一源码快照为 `calcit.cirru`，依赖与版本维护在 `deps.cirru`；生成文件输出到 `js-out/` 和 `dist/`。
 
 ```sh
 caps --strict --ci
