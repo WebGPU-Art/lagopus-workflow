@@ -39,7 +39,7 @@
                 (:cube) (comp-cube)
                 (:todo) (group nil)
           :examples $ []
-          :schema $ quote $ Fn SceneTab (-> JsObject)
+          :schema $ quote $ Fn SceneTab (-> JsObject) (:features :io :state)
         'comp-cube $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-cube ()
             object $ {} (:shader cube-wgsl)
@@ -56,7 +56,7 @@
                 {} $ :position $ [] 100 0 100
               :indices $ [] ([] 0 1 2 0 2 3) ([] 0 1 5 0 4 5) ([] 1 2 6 1 6 5) ([] 2 3 6 3 6 7) ([] 0 3 4 3 4 7) ([] 4 5 6 4 6 7)
           :examples $ []
-          :schema $ quote $ Fn (-> JsObject)
+          :schema $ quote $ Fn (-> JsObject) (:features :io)
         'comp-tabs $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn comp-tabs ()
             group nil
@@ -81,7 +81,7 @@
                     -> Unit
                   d! $ SceneTab :todo
           :examples $ []
-          :schema $ quote $ Fn (-> JsObject)
+          :schema $ quote $ Fn (-> JsObject) (:features :io)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.container
           :require
@@ -114,7 +114,7 @@
             when (not= tab @*store) (reset! *store tab)
             , &unit
           :examples $ []
-          :schema $ quote $ Fn app.comp.container/SceneTab (-> Unit)
+          :schema $ quote $ Fn app.comp.container/SceneTab (-> Unit) (:features :io :state)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! ()
             if dev? $ load-console-formatter!
@@ -131,20 +131,20 @@
             runtime/paint!
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi) (:async)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state) (:async)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (js-nullish? build-errors)
               do (reset-memof1-caches!) (render-app!) (remove-watch! *store :change) (add-watch! *store :change store-changed!) (println |Reloaded.) (show-status! |ok~ |OK)
               show-status! |error $ app.browser/error-text build-errors
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             runtime/render-tree! (comp-container @*store) dispatch!
             runtime/paint!
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'resize! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn resize! (_event) (runtime/reset-canvas! canvas) (runtime/initialize-textures!) (runtime/paint!)
           :examples $ []
@@ -152,7 +152,7 @@
         'store-changed! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn store-changed! (_next _previous) (render-app!)
           :examples $ []
-          :schema $ quote $ Fn app.comp.container/SceneTab app.comp.container/SceneTab (-> Unit)
+          :schema $ quote $ Fn app.comp.container/SceneTab app.comp.container/SceneTab (-> Unit) (:features :io :state)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require
