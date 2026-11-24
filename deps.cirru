@@ -1,5 +1,5 @@
 
-{} (:calcit-version |0.44.0)
+{} (:calcit-version |0.45.0)
   :version |0.0.1
   :dependencies $ {} (|WebGPU-Art/lagopus |0.5.18)
     |calcit-lang/memof |0.0.50
