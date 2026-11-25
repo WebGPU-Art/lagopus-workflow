@@ -10,11 +10,11 @@ https://github.com/Triadica/lagopus-workflow
 
 ### 使用者影响
 
-使用正式 Calcit 0.45.0。立方体和两个场景按钮沿用原操作，页面报错继续通过 bottom-tip 显示。扩展示例时，场景按钮直接派发 `SceneTab`，目前只有 `:cube` 和 `:todo` 两个变体。
+使用正式 Calcit 0.45.1。立方体和两个场景按钮沿用原操作，页面报错继续通过 bottom-tip 显示。扩展示例时，场景按钮直接派发 `SceneTab`，目前只有 `:cube` 和 `:todo` 两个变体。
 
 ### 开发与部署迁移
 
-工具链使用稳定 Calcit / `@calcit/procs` 0.45.0、Caps 0.1.2、Node.js 24 和 Yarn 4.18.0。使用已发布的 Lagopus 0.5.18、Memof 0.0.50 和 Quaternion 0.2.26。`@triadica/lagopus` 0.2.0 的 npm 运行时仍要求 Touch Control 0.0.4-a1。唯一源码快照为 `calcit.cirru`，依赖与版本维护在 `deps.cirru`；生成文件输出到 `js-out/` 和 `dist/`。
+工具链使用稳定 Calcit / `@calcit/procs` 0.45.1、Caps 0.1.2、Node.js 24 和 Yarn 4.18.0。使用已发布的 Lagopus 0.5.19、Memof 0.0.52 和 Quaternion 0.2.27。`@triadica/lagopus` 0.2.0 的 npm 运行时仍要求 Touch Control 0.0.4-a1。唯一源码快照为 `calcit.cirru`，依赖与版本维护在 `deps.cirru`；生成文件输出到 `js-out/` 和 `dist/`。
 
 ```sh
 caps --strict --ci
@@ -29,7 +29,7 @@ corepack yarn dev
 
 页面入口复用 Lagopus 的浏览器、GPU 和运行时适配层，缓存使用 `memo-object`。场景状态是 `Ref<SceneTab>`，按钮回调、状态更新与渲染共用同一类型。示例移除了没有发送方的通用状态写入分支。CI 同时检查全部定义和四个公开命名空间。
 
-本地验收覆盖全部 65 个定义、15 个公开定义、完整 strict、严格依赖图和 Vite CDN 构建。
+本地验收覆盖全部 96 个定义、15 个公开定义、完整 strict、严格依赖图和 Vite 构建。项目没有附带定义测试；本轮未在真实 WebGPU 设备验收。
 
 ### License
 
